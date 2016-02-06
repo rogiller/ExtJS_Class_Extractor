@@ -3,7 +3,7 @@ var acorn = require("acorn");
 var fs = require('fs');
 var util = require('util');
 
-//do an IIFE to start fire off extraction (just for fun :) )
+//do an IIFE to start fire off extraction (just to keep variables inside a function scope)
 (function doExtraction(){
 
     if(process.argv.length < 3){
@@ -13,41 +13,41 @@ var util = require('util');
 
     var extJSFilePath = process.argv[2];
 
-    var contents = fs.readFileSync(extJSFilePath, 'utf8');
+    var extJSFileContents = fs.readFileSync(extJSFilePath, 'utf8');
 
-    var esTree = acorn.parse(contents, null);
+    var esTree = acorn.parse(extJSFileContents, null);
 
     if(isProgram(esTree)){
 
-        var body = esTree.body;
+        var bodyArray = esTree.body;
 
         var result = {};
         var classes = [];
 
         result.classes = classes;
 
-        for (var i = 0; i < esTree.body.length; i++) {
+        for (var i = 0; i < bodyArray.length; i++) {
 
-            var bodyObj = esTree.body[i];
+            var bodyChunk = bodyArray[i];
 
-            if(isClass(bodyObj)){
-                classes.push(toClassObject(bodyObj));
+            if(isExtJSClass(bodyChunk)){
+                classes.push(toClassObject(bodyChunk));
             }
         }
 
-        console.log(util.inspect(result, {showHidden: false, depth: null}));
+        console.log(util.inspect(result, false, null));
     }
 
 })();
 
 function isProgram(esTree){
-    return esTree.type == 'Program';
+    return esTree.type === 'Program';
 }
 
-function isClass(bodyObj){
+function isExtJSClass(bodyChunk){
 
-    if(bodyObj.type == 'ExpressionStatement' && bodyObj.expression.callee.object.name == 'Ext' &&
-        bodyObj.expression.callee.property.name == 'define'){
+    if(bodyChunk.type === 'ExpressionStatement' && bodyChunk.expression.callee.object.name === 'Ext' &&
+        bodyChunk.expression.callee.property.name === 'define'){
 
         return true;
     }
@@ -55,18 +55,18 @@ function isClass(bodyObj){
     return false;
 }
 
-function toClassObject(bodyObj){
+function toClassObject(bodyChunk){
 
-    var defObj = bodyObj.expression.arguments[1];
+    var props = bodyChunk.expression.arguments[1].properties;
 
     var fields = [];
     var methods = [];
 
-    for(var j = 0; j < defObj.properties.length; j++){
+    for(var i = 0; i < props.length; i++){
 
-        var prop = defObj.properties[j];
+        var prop = props[i];
 
-        if(prop.value.type == 'FunctionExpression'){
+        if(prop.value.type === 'FunctionExpression'){
             fields.push({ name : prop.key.name});
         }else{
             methods.push({ name : prop.key.name});
@@ -74,7 +74,7 @@ function toClassObject(bodyObj){
     }
 
     var classObj = {};
-    classObj.name = bodyObj.expression.arguments[0].value;
+    classObj.name = bodyChunk.expression.arguments[0].value;
     classObj.fields = fields;
     classObj.methods = methods;
 
