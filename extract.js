@@ -67,9 +67,9 @@ function toClassObject(bodyChunk){
         var prop = props[i];
 
         if(prop.value.type === 'FunctionExpression'){
-            fields.push({ name : prop.key.name});
-        }else{
             methods.push({ name : prop.key.name});
+        }else{
+            fields.push({ name : prop.key.name});
         }
     }
 

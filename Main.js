@@ -33,7 +33,7 @@ Ext.define('MyApp.view.Main', {
 	}
 });
 
-Ext.define('MyApp.view.Main2', {
+/*Ext.define('MyApp.view.Main2', {
 	message: 'Hello world2',
 
 	start2: function() {
@@ -43,4 +43,4 @@ Ext.define('MyApp.view.Main2', {
 	stop2: function() {
 		console.log('stopped')
 	}
-});
+});*/
